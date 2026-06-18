@@ -24,6 +24,16 @@ const playerMap = computed(() => {
   return m
 })
 
+// Attendance: which players actually showed up. Defaults to everyone present.
+const present = ref({}) // { [playerId]: true|false }
+const presentCount = computed(() => players.value.filter((p) => present.value[p.id]).length)
+
+function setAllPresent(value) {
+  const next = {}
+  for (const p of players.value) next[p.id] = value
+  present.value = next
+}
+
 function name(id) { return playerMap.value[id]?.displayName || 'Desconocido' }
 function color(id) { return playerMap.value[id]?.color || '#8b5cf6' }
 
@@ -34,14 +44,19 @@ const fmtDate = (d) =>
 
 async function load() {
   ;[players.value, matchDays.value] = await Promise.all([db.listPlayers(), db.listMatchDays()])
+  // Mark anyone newly loaded as present by default, keep existing choices.
+  const next = { ...present.value }
+  for (const p of players.value) if (!(p.id in next)) next[p.id] = true
+  present.value = next
   loading.value = false
 }
 onMounted(load)
 
 async function generate() {
   error.value = ''
-  if (players.value.length < 2) {
-    error.value = 'Se necesitan al menos 2 jugadores para crear una jornada.'
+  const attending = players.value.filter((p) => present.value[p.id]).map((p) => p.id)
+  if (attending.length < 2) {
+    error.value = 'Marca al menos 2 jugadores presentes para crear una jornada.'
     return
   }
   if (matchDays.value.some((d) => d.date === form.value.date)) {
@@ -52,7 +67,7 @@ async function generate() {
   try {
     const md = buildMatchDay({
       date: form.value.date,
-      playerIds: players.value.map((p) => p.id),
+      playerIds: attending,
       rounds: Number(form.value.rounds),
       podSize: Number(form.value.podSize)
     })
@@ -108,8 +123,27 @@ async function pickWinner(day, round, pod, playerId) {
         {{ busy ? 'Sorteando mesas…' : 'Generar' }}
       </button>
     </div>
+
+    <div class="attendance">
+      <div class="row spread" style="margin-bottom:10px">
+        <strong>¿Quiénes asistieron?</strong>
+        <div class="row" style="gap:8px">
+          <button type="button" class="btn ghost sm" @click="setAllPresent(true)">Todos</button>
+          <button type="button" class="btn ghost sm" @click="setAllPresent(false)">Ninguno</button>
+        </div>
+      </div>
+      <div v-if="players.length === 0" class="muted">Aún no hay jugadores registrados.</div>
+      <div v-else class="att-grid">
+        <label v-for="p in players" :key="p.id" class="att-item" :class="{ off: !present[p.id] }">
+          <input type="checkbox" v-model="present[p.id]" />
+          <span class="dot" :style="{ background: p.color }"></span>
+          <span class="att-name">{{ p.displayName }}</span>
+        </label>
+      </div>
+    </div>
+
     <p class="muted" style="font-size:.82rem; margin-bottom:0">
-      {{ players.length }} jugador{{ players.length === 1 ? '' : 'es' }} se repartirán en mesas aleatorias para cada partida.
+      Se repartirán <strong>{{ presentCount }}</strong> jugador{{ presentCount === 1 ? '' : 'es' }} presente{{ presentCount === 1 ? '' : 's' }} en mesas aleatorias. Quienes no marques quedan fuera de esta jornada.
     </p>
   </div>
   <div v-else-if="auth.user" class="alert info">Solo el organizador de la liga puede generar jornadas y registrar resultados.</div>
@@ -163,6 +197,24 @@ async function pickWinner(day, round, pod, playerId) {
 }
 .controls label { margin-top: 0; }
 @media (max-width: 640px) { .controls { grid-template-columns: 1fr 1fr; } }
+
+.attendance {
+  margin: 16px 0;
+  padding: 14px;
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.att-grid { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+.att-item {
+  display: flex; align-items: center; gap: 9px;
+  margin: 0; padding: 8px 10px;
+  background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
+  cursor: pointer; user-select: none; font-size: .9rem;
+}
+.att-item input { width: auto; margin: 0; cursor: pointer; accent-color: var(--primary); }
+.att-item.off { opacity: .5; }
+.att-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .days { display: grid; gap: 16px; }
 .round { margin-top: 16px; }
