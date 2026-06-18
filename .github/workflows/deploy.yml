@@ -23,6 +23,11 @@ jobs:
         with:
           node-version: 20
           cache: npm
+      # Auto-enables GitHub Pages for the repo if it isn't already, so no
+      # manual toggle in Settings > Pages is required.
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
       - run: npm ci
       - run: npm run build
         # To deploy with a shared Supabase backend, add these as repository
