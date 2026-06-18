@@ -1,7 +1,8 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { RouterLink } from 'vue-router'
 import { db } from '../services/db'
-import { buildLeaderboard, POINTS_WIN, POINTS_PLAYED } from '../services/scoring'
+import { buildLeaderboard } from '../services/scoring'
 import Avatar from '../components/Avatar.vue'
 
 const loading = ref(true)
@@ -19,21 +20,25 @@ const medal = (i) => ['🥇', '🥈', '🥉'][i] || ''
 
 <template>
   <h1>Clasificación</h1>
-  <p class="muted">{{ POINTS_WIN }} puntos por victoria · {{ POINTS_PLAYED }} punto por partida jugada.</p>
+  <p class="muted">
+    Total = Resultado (1.º 5 · 2.º 2 · participar 1) + 💀 eliminaciones + 🏅 logros + 🎴 misión.
+    Desempate: más logros legendarios, luego más victorias. Ver <RouterLink to="/rules">reglas</RouterLink>.
+  </p>
 
   <div v-if="loading" class="empty">Cargando…</div>
   <div v-else-if="ranked.length === 0" class="empty">Aún no hay partidas registradas. La tabla aparece cuando lleguen los resultados.</div>
 
-  <div v-else class="card" style="padding: 6px 8px">
+  <div v-else class="card tablewrap" style="padding: 6px 8px">
     <table>
       <thead>
         <tr>
-          <th style="width:48px">#</th>
+          <th style="width:44px">#</th>
           <th>Jugador</th>
           <th class="num">Pts</th>
-          <th class="num">V</th>
-          <th class="num">PJ</th>
-          <th class="num">% Vict.</th>
+          <th class="num" title="Victorias (1.º lugar)">🥇</th>
+          <th class="num" title="Logros (legendarios)">🏅</th>
+          <th class="num" title="Eliminaciones">💀</th>
+          <th class="num" title="Partidas jugadas">PJ</th>
         </tr>
       </thead>
       <tbody>
@@ -50,10 +55,16 @@ const medal = (i) => ['🥇', '🥈', '🥉'][i] || ''
           </td>
           <td class="num"><strong>{{ r.points }}</strong></td>
           <td class="num">{{ r.wins }}</td>
+          <td class="num">{{ r.achievements }}<span v-if="r.legendary" class="leg"> ({{ r.legendary }}🟠)</span></td>
+          <td class="num">{{ r.eliminations }}</td>
           <td class="num">{{ r.games }}</td>
-          <td class="num">{{ Math.round(r.winRate * 100) }}%</td>
         </tr>
       </tbody>
     </table>
   </div>
 </template>
+
+<style scoped>
+.tablewrap { overflow-x: auto; }
+.leg { color: #f59e0b; font-size: .8rem; }
+</style>

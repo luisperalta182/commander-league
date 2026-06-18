@@ -31,6 +31,7 @@ async function doSignOut() {
         <RouterLink to="/prizes">Premios</RouterLink>
         <RouterLink to="/calendar">Calendario</RouterLink>
         <RouterLink to="/players">Jugadores</RouterLink>
+        <RouterLink to="/rules">Reglas</RouterLink>
         <template v-if="auth.user">
           <RouterLink to="/profile">Perfil</RouterLink>
           <button class="btn ghost sm" @click.stop="doSignOut">Cerrar sesión</button>

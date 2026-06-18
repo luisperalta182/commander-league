@@ -105,14 +105,16 @@ const localBackend = {
     write(K_MATCHDAYS, read(K_MATCHDAYS, []).filter((d) => d.id !== id))
   },
 
-  async setWinner(matchDayId, roundNo, podId, winnerId) {
+  async savePod(matchDayId, roundNo, podId, data) {
     const days = read(K_MATCHDAYS, [])
     const day = days.find((d) => d.id === matchDayId)
     if (!day) throw new Error('Match day not found.')
     const round = day.rounds.find((r) => r.roundNo === roundNo)
     const pod = round?.pods.find((p) => p.id === podId)
     if (!pod) throw new Error('Pod not found.')
-    pod.winnerId = pod.winnerId === winnerId ? null : winnerId // toggle off if reselected
+    pod.winnerId = data.winnerId ?? null
+    pod.secondId = data.secondId ?? null
+    pod.perPlayer = data.perPlayer ?? {}
     write(K_MATCHDAYS, days)
     return day
   }
@@ -223,16 +225,18 @@ const supabaseBackend = {
     if (error) throw new Error(error.message)
   },
 
-  async setWinner(matchDayId, roundNo, podId, winnerId) {
-    const { data, error } = await supabase.from('match_days').select('*').eq('id', matchDayId).single()
+  async savePod(matchDayId, roundNo, podId, data) {
+    const { data: row, error } = await supabase.from('match_days').select('*').eq('id', matchDayId).single()
     if (error) throw new Error(error.message)
-    const rounds = data.rounds
+    const rounds = row.rounds
     const pod = rounds.find((r) => r.roundNo === roundNo)?.pods.find((p) => p.id === podId)
     if (!pod) throw new Error('Pod not found.')
-    pod.winnerId = pod.winnerId === winnerId ? null : winnerId
+    pod.winnerId = data.winnerId ?? null
+    pod.secondId = data.secondId ?? null
+    pod.perPlayer = data.perPlayer ?? {}
     const { error: uErr } = await supabase.from('match_days').update({ rounds }).eq('id', matchDayId)
     if (uErr) throw new Error(uErr.message)
-    return { ...data, rounds }
+    return { ...row, rounds }
   }
 }
 

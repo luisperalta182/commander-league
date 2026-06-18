@@ -27,9 +27,10 @@ onMounted(async () => {
   <section class="hero card">
     <div class="badge" style="margin-bottom:12px">Organiza · Masatepe The Gathering</div>
     <h1>⚔️ Liga de Commander</h1>
+    <p class="lead phrase">"El campeón no es el más fuerte… es el que más historias genera."</p>
     <p class="muted lead">
-      Únete a la mesa, arma tu perfil y juega cada domingo. Dos partidas por semana,
-      mesas aleatorias y una clasificación en vivo para coronar al campeón de la liga.
+      Únete a la mesa, arma tu perfil y juega cada domingo. Mesas de 3–4, una partida
+      por jornada, logros, misiones secretas y una clasificación en vivo para coronar al campeón.
     </p>
     <div class="row">
       <RouterLink v-if="!auth.user" to="/register" class="btn">Unirse a la liga</RouterLink>
@@ -59,16 +60,18 @@ onMounted(async () => {
     <h3>Cómo funciona</h3>
     <ol class="how">
       <li><strong>Crea tu perfil</strong> — nombre, comandante favorito y colores.</li>
-      <li><strong>Cada domingo es una jornada</strong> — el organizador genera mesas aleatorias de ~4.</li>
-      <li><strong>Juega 2 partidas</strong> y reporta quién ganó cada mesa.</li>
-      <li><strong>Sube en la clasificación</strong> — {{ 3 }} puntos por victoria, más un punto por participar.</li>
+      <li><strong>Cada domingo es una jornada</strong> — el organizador genera mesas aleatorias de 3–4.</li>
+      <li><strong>Juega y reporta</strong> — posición (1.º/2.º), eliminaciones, logros y misión secreta.</li>
+      <li><strong>Sube en la clasificación</strong> — 1.º = 5 pts, 2.º = 2, participar = 1, + logros y misiones.</li>
     </ol>
+    <RouterLink to="/rules" class="btn ghost sm" style="margin-top:6px">Ver reglamento completo →</RouterLink>
   </div>
 </template>
 
 <style scoped>
 .hero { padding: 34px 26px; }
 .lead { max-width: 60ch; font-size: 1.05rem; margin-bottom: 22px; }
+.phrase { font-style: italic; color: var(--gold); font-size: 1.1rem; margin-bottom: 14px; }
 .stat { text-align: center; }
 .stat .big { font-size: 2.4rem; font-weight: 800; color: var(--primary-2); }
 .how { margin: 8px 0 0; padding-left: 20px; }

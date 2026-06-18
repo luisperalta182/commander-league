@@ -9,6 +9,7 @@ import Players from './views/Players.vue'
 import Calendar from './views/Calendar.vue'
 import Leaderboard from './views/Leaderboard.vue'
 import Prizes from './views/Prizes.vue'
+import Rules from './views/Rules.vue'
 
 const routes = [
   { path: '/', component: Home },
@@ -19,6 +20,7 @@ const routes = [
   { path: '/calendar', component: Calendar },
   { path: '/leaderboard', component: Leaderboard },
   { path: '/prizes', component: Prizes },
+  { path: '/rules', component: Rules },
   { path: '/:pathMatch(.*)*', redirect: '/' }
 ]
 

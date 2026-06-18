@@ -41,9 +41,9 @@ const uid = () =>
   (crypto.randomUUID && crypto.randomUUID()) ||
   'p' + Math.random().toString(36).slice(2) + Date.now().toString(36)
 
-// Build a full match day: `rounds` independent random pod sets so each player
-// faces different opponents in each game of the day.
-export function buildMatchDay({ date, playerIds, rounds = 2, podSize = 4 }) {
+// Build a full match day. La liga juega 1 partida por jornada por defecto, pero
+// `rounds` permite generar más si se quiere.
+export function buildMatchDay({ date, playerIds, rounds = 1, podSize = 4 }) {
   const roundList = []
   for (let r = 1; r <= rounds; r++) {
     roundList.push({
@@ -51,7 +51,9 @@ export function buildMatchDay({ date, playerIds, rounds = 2, podSize = 4 }) {
       pods: makePods(playerIds, podSize).map((players) => ({
         id: uid(),
         players,
-        winnerId: null
+        winnerId: null, // 1.º lugar
+        secondId: null, // 2.º lugar
+        perPlayer: {}   // { [playerId]: { eliminations, achievements:[], secretMissionId, secretDone } }
       }))
     })
   }

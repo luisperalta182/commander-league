@@ -5,8 +5,10 @@ organized by **Masatepe The Gathering**. The interface is in Spanish.
 
 - 🔐 Sign up / log in (Entrar / Unirse)
 - 🧙 Player profiles (display name, favorite commander, color, bio)
-- 📅 Sunday match-day calendar — the organizer generates **random pods of ~4**, 2 games each Sunday
-- 🏆 Leaderboard (points, wins, games played, win rate)
+- 📅 Sunday match-day calendar — the organizer marks attendance and generates **random pods of 3–4**, 1 game per Sunday
+- 🎴 Rich scoring: placement (1st 5 · 2nd 2 · participate 1) + eliminations + achievements (by rarity) + secret missions
+- 🏆 Leaderboard with tiebreakers (most legendary achievements, then wins)
+- 🎴 Reglas page — full ruleset, achievement catalog and secret missions
 - 🎁 Prizes tab (Premios) — top-3 podium with a "premios próximamente" notice
 
 The **first person to register becomes the league organizer (admin)** and can
@@ -63,7 +65,9 @@ links work on GitHub Pages with no extra server config.
 
 ## Tweaking the rules
 
-- **Scoring** — edit `POINTS_WIN` / `POINTS_PLAYED` in [`src/services/scoring.js`](src/services/scoring.js).
+- **Scoring & achievements** — edit `POINTS`, the achievement catalog and secret
+  missions in [`src/services/achievements.js`](src/services/achievements.js); the
+  leaderboard logic lives in [`src/services/scoring.js`](src/services/scoring.js).
 - **Pods / games per Sunday** — defaults to 2 games, pods of 4; the admin can
   change both when generating a match day. Logic lives in
   [`src/services/scheduler.js`](src/services/scheduler.js).

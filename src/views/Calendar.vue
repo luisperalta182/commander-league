@@ -4,6 +4,7 @@ import { RouterLink } from 'vue-router'
 import { db } from '../services/db'
 import { auth } from '../store/auth'
 import { buildMatchDay, upcomingSundays } from '../services/scheduler'
+import PodResults from '../components/PodResults.vue'
 
 const players = ref([])
 const matchDays = ref([])
@@ -13,7 +14,7 @@ const busy = ref(false)
 
 const form = ref({
   date: upcomingSundays(new Date(), 1)[0],
-  rounds: 2,
+  rounds: 1,
   podSize: 4
 })
 
@@ -36,6 +37,11 @@ function setAllPresent(value) {
 
 function name(id) { return playerMap.value[id]?.displayName || 'Desconocido' }
 function color(id) { return playerMap.value[id]?.color || '#8b5cf6' }
+
+// Resolve a pod's player ids to full player objects (in seat order).
+function podPlayers(pod) {
+  return pod.players.map((id) => playerMap.value[id] || { id, displayName: 'Desconocido', color: '#8b5cf6' })
+}
 
 const fmtDate = (d) =>
   new Date(d + 'T12:00:00').toLocaleDateString('es-ES', {
@@ -88,9 +94,9 @@ async function remove(day) {
   await load()
 }
 
-async function pickWinner(day, round, pod, playerId) {
+async function savePod(day, round, pod, data) {
   if (!isAdmin.value) return
-  await db.setWinner(day.id, round.roundNo, pod.id, playerId)
+  await db.savePod(day.id, round.roundNo, pod.id, data)
   await load()
 }
 </script>
@@ -99,7 +105,7 @@ async function pickWinner(day, round, pod, playerId) {
   <div class="row spread">
     <div>
       <h1>Calendario de jornadas</h1>
-      <p class="muted">Dos partidas cada domingo. Las mesas se sortean al azar.</p>
+      <p class="muted">Una partida cada domingo. Las mesas de 3–4 se sortean al azar.</p>
     </div>
   </div>
 
@@ -166,19 +172,12 @@ async function pickWinner(day, round, pod, playerId) {
         <div class="pods">
           <div v-for="(pod, pi) in round.pods" :key="pod.id" class="pod">
             <div class="pod-head">Mesa {{ pi + 1 }}</div>
-            <ul class="seats">
-              <li
-                v-for="pid in pod.players" :key="pid"
-                class="seat"
-                :class="{ winner: pod.winnerId === pid, clickable: isAdmin }"
-                @click="pickWinner(day, round, pod, pid)"
-              >
-                <span class="dot" :style="{ background: color(pid) }"></span>
-                <span class="seat-name">{{ name(pid) }}</span>
-                <span v-if="pod.winnerId === pid" class="badge win">🏆 Ganó</span>
-              </li>
-            </ul>
-            <div v-if="isAdmin && !pod.winnerId" class="hint muted">Toca a un jugador para marcar al ganador</div>
+            <PodResults
+              :pod="pod"
+              :players="podPlayers(pod)"
+              :can-edit="isAdmin"
+              :on-submit="(data) => savePod(day, round, pod, data)"
+            />
           </div>
         </div>
       </div>
