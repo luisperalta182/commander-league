@@ -90,6 +90,20 @@ const localBackend = {
     return read(K_USERS, []).map(publicProfile)
   },
 
+  async setAdmin(userId, isAdmin) {
+    const users = read(K_USERS, [])
+    const u = users.find((x) => x.id === userId)
+    if (!u) throw new Error('Jugador no encontrado.')
+    u.isAdmin = isAdmin
+    write(K_USERS, users)
+    return publicProfile(u)
+  },
+
+  async deletePlayer(userId) {
+    write(K_USERS, read(K_USERS, []).filter((u) => u.id !== userId))
+    if (read(K_SESSION, null) === userId) localStorage.removeItem(K_SESSION)
+  },
+
   async listMatchDays() {
     return read(K_MATCHDAYS, []).slice().sort((a, b) => a.date.localeCompare(b.date))
   },
@@ -202,6 +216,17 @@ const supabaseBackend = {
     const { data, error } = await supabase.from('profiles').select('*')
     if (error) throw new Error(error.message)
     return data.map(rowToProfile)
+  },
+
+  async setAdmin(userId, isAdmin) {
+    const { error } = await supabase.rpc('set_admin', { target: userId, value: isAdmin })
+    if (error) throw new Error(error.message)
+    return fetchProfile(userId)
+  },
+
+  async deletePlayer(userId) {
+    const { error } = await supabase.rpc('delete_player', { target: userId })
+    if (error) throw new Error(error.message)
   },
 
   async listMatchDays() {
