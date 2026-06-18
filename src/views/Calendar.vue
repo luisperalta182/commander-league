@@ -94,6 +94,11 @@ async function remove(day) {
   await load()
 }
 
+async function toggleFinished(day) {
+  await db.setMatchDayFinished(day.id, !day.finished)
+  await load()
+}
+
 async function savePod(day, round, pod, data) {
   if (!isAdmin.value) return
   await db.savePod(day.id, round.roundNo, pod.id, data)
@@ -161,11 +166,22 @@ async function savePod(day, round, pod, data) {
   <div v-else-if="matchDays.length === 0" class="empty">Aún no hay jornadas programadas.</div>
 
   <div v-else class="days">
-    <div v-for="day in matchDays" :key="day.id" class="card day">
+    <div v-for="day in matchDays" :key="day.id" class="card day" :class="{ finished: day.finished }">
       <div class="row spread">
-        <h2 style="margin:0">📅 {{ fmtDate(day.date) }}</h2>
-        <button v-if="isAdmin" class="btn danger sm" @click="remove(day)">Eliminar</button>
+        <h2 style="margin:0; display:flex; align-items:center; gap:10px">
+          📅 {{ fmtDate(day.date) }}
+          <span v-if="day.finished" class="badge win">🏁 Finalizada</span>
+        </h2>
+        <div v-if="isAdmin" class="row" style="gap:8px">
+          <button class="btn ghost sm" @click="toggleFinished(day)">
+            {{ day.finished ? '🔓 Reabrir' : '🏁 Finalizar' }}
+          </button>
+          <button class="btn danger sm" @click="remove(day)">Eliminar</button>
+        </div>
       </div>
+      <p v-if="day.finished && isAdmin" class="muted" style="font-size:.82rem; margin:6px 0 0">
+        Jornada cerrada: los resultados están bloqueados. Pulsa "Reabrir" para corregir.
+      </p>
 
       <div v-for="round in day.rounds" :key="round.roundNo" class="round">
         <div class="round-title">Partida {{ round.roundNo }}</div>
@@ -175,7 +191,7 @@ async function savePod(day, round, pod, data) {
             <PodResults
               :pod="pod"
               :players="podPlayers(pod)"
-              :can-edit="isAdmin"
+              :can-edit="isAdmin && !day.finished"
               :on-submit="(data) => savePod(day, round, pod, data)"
             />
           </div>
@@ -216,6 +232,7 @@ async function savePod(day, round, pod, data) {
 .att-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .days { display: grid; gap: 16px; }
+.day.finished { border-color: rgba(74, 222, 128, .35); }
 .round { margin-top: 16px; }
 .round-title {
   font-size: .8rem; text-transform: uppercase; letter-spacing: .5px;

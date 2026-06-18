@@ -61,6 +61,7 @@ export function buildMatchDay({ date, playerIds, rounds = 1, podSize = 4 }) {
     id: uid(),
     date,
     createdAt: new Date().toISOString(),
+    finished: false,
     rounds: roundList
   }
 }

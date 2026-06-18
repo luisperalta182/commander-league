@@ -20,6 +20,7 @@ create table if not exists public.match_days (
   id         uuid primary key,
   date       date not null,
   rounds     jsonb not null default '[]',
+  finished   boolean not null default false,
   created_at timestamptz not null default now()
 );
 

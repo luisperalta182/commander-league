@@ -119,6 +119,15 @@ const localBackend = {
     write(K_MATCHDAYS, read(K_MATCHDAYS, []).filter((d) => d.id !== id))
   },
 
+  async setMatchDayFinished(id, finished) {
+    const days = read(K_MATCHDAYS, [])
+    const day = days.find((d) => d.id === id)
+    if (!day) throw new Error('Match day not found.')
+    day.finished = finished
+    write(K_MATCHDAYS, days)
+    return day
+  },
+
   async savePod(matchDayId, roundNo, podId, data) {
     const days = read(K_MATCHDAYS, [])
     const day = days.find((d) => d.id === matchDayId)
@@ -232,7 +241,12 @@ const supabaseBackend = {
   async listMatchDays() {
     const { data, error } = await supabase.from('match_days').select('*').order('date')
     if (error) throw new Error(error.message)
-    return data.map((d) => ({ id: d.id, date: d.date, createdAt: d.created_at, rounds: d.rounds }))
+    return data.map((d) => ({ id: d.id, date: d.date, createdAt: d.created_at, finished: !!d.finished, rounds: d.rounds }))
+  },
+
+  async setMatchDayFinished(id, finished) {
+    const { error } = await supabase.from('match_days').update({ finished }).eq('id', id)
+    if (error) throw new Error(error.message)
   },
 
   async createMatchDay(matchDay) {
