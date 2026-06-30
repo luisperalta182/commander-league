@@ -62,7 +62,7 @@ onMounted(async () => {
       <li><strong>Crea tu perfil</strong> — nombre, comandante favorito y colores.</li>
       <li><strong>Cada domingo es una jornada</strong> — el organizador genera mesas aleatorias de 3–4.</li>
       <li><strong>Juega y reporta</strong> — posición (1.º/2.º), eliminaciones, logros y misión secreta.</li>
-      <li><strong>Sube en la clasificación</strong> — 1.º = 5 pts, 2.º = 2, participar = 1, + logros y misiones.</li>
+      <li><strong>Sube en la clasificación</strong> — 1 pt por asistir (siempre) + 5 al 1.º / 2 al 2.º, + logros y misiones.</li>
     </ol>
     <RouterLink to="/rules" class="btn ghost sm" style="margin-top:6px">Ver reglamento completo →</RouterLink>
   </div>

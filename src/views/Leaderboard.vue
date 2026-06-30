@@ -21,7 +21,7 @@ const medal = (i) => ['🥇', '🥈', '🥉'][i] || ''
 <template>
   <h1>Clasificación</h1>
   <p class="muted">
-    Total = Resultado (1.º 5 · 2.º 2 · participar 1) + 💀 eliminaciones + 🏅 logros + 🎴 misión.
+    Total = 1 por participar (siempre) + 1.º +5 / 2.º +2 + 💀 eliminaciones + 🏅 logros + 🎴 misión.
     Desempate: más logros legendarios, luego más victorias. Ver <RouterLink to="/rules">reglas</RouterLink>.
   </p>
 

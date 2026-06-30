@@ -19,13 +19,13 @@ import { ACHIEVEMENTS_BY_RARITY, SECRET_MISSIONS, SECRET_MISSION_POINTS, MAX_ACH
   <div class="card">
     <h3>🏆 Puntos base (resultado)</h3>
     <div class="pts">
-      <div class="pt"><span class="b">🥇 {{ POINTS.win }}</span> Ganar la partida (1.º)</div>
-      <div class="pt"><span class="b">🥈 {{ POINTS.second }}</span> Segundo lugar</div>
-      <div class="pt"><span class="b">👤 {{ POINTS.participate }}</span> Participar</div>
-      <div class="pt"><span class="b">💀 {{ POINTS.elimination }}</span> Por cada jugador eliminado</div>
+      <div class="pt"><span class="b">👤 {{ POINTS.participate }}</span> Participar (siempre, solo por estar en la mesa)</div>
+      <div class="pt"><span class="b">🥇 +{{ POINTS.win }}</span> Ganar la partida (1.º) → {{ POINTS.participate + POINTS.win }} en total</div>
+      <div class="pt"><span class="b">🥈 +{{ POINTS.second }}</span> Segundo lugar → {{ POINTS.participate + POINTS.second }} en total</div>
+      <div class="pt"><span class="b">💀 +{{ POINTS.elimination }}</span> Por cada jugador eliminado</div>
     </div>
     <p class="muted" style="margin-bottom:0; font-size:.85rem">
-      La posición es excluyente (te da 5, 2 o 1). Las eliminaciones, logros y misión se suman aparte.
+      Todos reciben {{ POINTS.participate }} punto por participar solo por estar en la mesa. El 1.º suma +{{ POINTS.win }} y el 2.º +{{ POINTS.second }} encima de eso. Las eliminaciones, logros y misión se suman aparte.
     </p>
   </div>
 

@@ -12,10 +12,11 @@ export function podPointsForPlayer(pod, playerId) {
   const pp = (pod.perPlayer && pod.perPlayer[playerId]) || {}
   const out = { result: 0, eliminations: 0, achievements: 0, mission: 0, total: 0, isWin: false, isSecond: false, legendary: 0 }
 
-  // Resultado por posición (excluyente).
-  if (pod.winnerId === playerId) { out.result = POINTS.win; out.isWin = true }
-  else if (pod.secondId === playerId) { out.result = POINTS.second; out.isSecond = true }
-  else { out.result = POINTS.participate }
+  // Participación: 1 punto SIEMPRE por estar en la mesa.
+  // La posición se SUMA encima (aditivo): 1.º = 1+5, 2.º = 1+2.
+  out.result = POINTS.participate
+  if (pod.winnerId === playerId) { out.result += POINTS.win; out.isWin = true }
+  else if (pod.secondId === playerId) { out.result += POINTS.second; out.isSecond = true }
 
   out.eliminations = (pp.eliminations || 0) * POINTS.elimination
 
