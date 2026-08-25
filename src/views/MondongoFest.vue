@@ -85,6 +85,7 @@ async function removeParticipant(p) {
     <div class="card fmt"><div class="fmt-emoji">🤺</div><strong>Dual Commander</strong><p class="muted">Commander 1 contra 1. Duelos tácticos con tu general.</p></div>
     <div class="card fmt"><div class="fmt-emoji">🪙</div><strong>Pauper</strong><p class="muted">Solo comunes, puro ingenio. Barato y brutal.</p></div>
     <div class="card fmt"><div class="fmt-emoji">⚡</div><strong>Modern</strong><p class="muted">Cartas de 8ª edición en adelante. Rápido y competitivo.</p></div>
+    <div class="card fmt"><div class="fmt-emoji">🏛️</div><strong>Legacy</strong><p class="muted">Casi todo permitido. Poder puro y decks históricos.</p></div>
     <div class="card fmt"><div class="fmt-emoji">⚔️</div><strong>cEDH</strong><p class="muted">Para los que juegan a ganar. Combos y velocidad.</p></div>
   </div>
 
