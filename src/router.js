@@ -10,6 +10,8 @@ import Calendar from './views/Calendar.vue'
 import Leaderboard from './views/Leaderboard.vue'
 import Prizes from './views/Prizes.vue'
 import Rules from './views/Rules.vue'
+import MondongoFest from './views/MondongoFest.vue'
+import Rifa from './views/Rifa.vue'
 
 const routes = [
   { path: '/', component: Home },
@@ -21,6 +23,8 @@ const routes = [
   { path: '/leaderboard', component: Leaderboard },
   { path: '/prizes', component: Prizes },
   { path: '/rules', component: Rules },
+  { path: '/fest', component: MondongoFest },
+  { path: '/rifa', component: Rifa },
   { path: '/:pathMatch(.*)*', redirect: '/' }
 ]
 

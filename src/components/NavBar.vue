@@ -27,6 +27,8 @@ async function doSignOut() {
       <button class="hamburger" @click="open = !open" aria-label="Menú">☰</button>
 
       <nav class="links" :class="{ open }" @click="open = false">
+        <RouterLink to="/fest" class="fest-link">🦌 Mondongo Fest</RouterLink>
+        <RouterLink to="/rifa">Rifa</RouterLink>
         <RouterLink to="/leaderboard">Clasificación</RouterLink>
         <RouterLink to="/prizes">Premios</RouterLink>
         <RouterLink to="/calendar">Calendario</RouterLink>
@@ -82,6 +84,8 @@ async function doSignOut() {
 .links a { color: var(--muted); font-weight: 600; font-size: .92rem; }
 .links a:hover { color: var(--text); text-decoration: none; }
 .links a.router-link-active:not(.btn) { color: var(--primary-2); }
+.links a.fest-link { color: var(--gold); }
+.links a.fest-link:hover { color: #f5cf6b; }
 .links a.btn { color: white; }
 .hamburger {
   display: none;

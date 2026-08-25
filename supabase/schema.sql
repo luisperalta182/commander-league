@@ -84,3 +84,18 @@ $$;
 grant execute on function public.is_admin(uuid)           to authenticated;
 grant execute on function public.set_admin(uuid, boolean) to authenticated;
 grant execute on function public.delete_player(uuid)      to authenticated;
+
+-- 5. Mondongo Fest: inscripciones y rifa (evento abierto).
+create table if not exists public.fest_participants (
+  id         uuid primary key default gen_random_uuid(),
+  name       text not null,
+  ganador    boolean not null default false,
+  created_at timestamptz not null default now()
+);
+alter table public.fest_participants enable row level security;
+create policy "fest select" on public.fest_participants for select using (true);
+create policy "fest insert" on public.fest_participants for insert with check (true);
+create policy "fest admin update" on public.fest_participants
+  for update using (public.is_admin(auth.uid())) with check (public.is_admin(auth.uid()));
+create policy "fest admin delete" on public.fest_participants
+  for delete using (public.is_admin(auth.uid()));

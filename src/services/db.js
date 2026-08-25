@@ -22,6 +22,7 @@ const uid = () =>
 const K_USERS = 'cl.users'
 const K_MATCHDAYS = 'cl.matchdays'
 const K_SESSION = 'cl.session'
+const K_FEST = 'cl.fest'
 
 const read = (k, fallback) => {
   try { return JSON.parse(localStorage.getItem(k)) ?? fallback } catch { return fallback }
@@ -140,6 +141,32 @@ const localBackend = {
     pod.perPlayer = data.perPlayer ?? {}
     write(K_MATCHDAYS, days)
     return day
+  },
+
+  // ---- Mondongo Fest: inscripciones y rifa ----
+  async listFestParticipants() {
+    return read(K_FEST, []).slice().sort((a, b) => (a.createdAt || '').localeCompare(b.createdAt || ''))
+  },
+
+  async addFestParticipant(name) {
+    const list = read(K_FEST, [])
+    const p = { id: uid(), name: name.trim(), ganador: false, createdAt: new Date().toISOString() }
+    list.push(p)
+    write(K_FEST, list)
+    return p
+  },
+
+  async setFestWinner(id) {
+    const list = read(K_FEST, [])
+    const p = list.find((x) => x.id === id)
+    if (!p) throw new Error('Participante no encontrado.')
+    p.ganador = true
+    write(K_FEST, list)
+    return p
+  },
+
+  async deleteFestParticipant(id) {
+    write(K_FEST, read(K_FEST, []).filter((x) => x.id !== id))
   }
 }
 
@@ -276,6 +303,30 @@ const supabaseBackend = {
     const { error: uErr } = await supabase.from('match_days').update({ rounds }).eq('id', matchDayId)
     if (uErr) throw new Error(uErr.message)
     return { ...row, rounds }
+  },
+
+  // ---- Mondongo Fest: inscripciones y rifa ----
+  async listFestParticipants() {
+    const { data, error } = await supabase.from('fest_participants').select('*').order('created_at')
+    if (error) throw new Error(error.message)
+    return data.map((r) => ({ id: r.id, name: r.name, ganador: !!r.ganador, createdAt: r.created_at }))
+  },
+
+  async addFestParticipant(name) {
+    const row = { id: uid(), name: name.trim() }
+    const { error } = await supabase.from('fest_participants').insert(row)
+    if (error) throw new Error(error.message)
+    return { ...row, ganador: false }
+  },
+
+  async setFestWinner(id) {
+    const { error } = await supabase.from('fest_participants').update({ ganador: true }).eq('id', id)
+    if (error) throw new Error(error.message)
+  },
+
+  async deleteFestParticipant(id) {
+    const { error } = await supabase.from('fest_participants').delete().eq('id', id)
+    if (error) throw new Error(error.message)
   }
 }
 
