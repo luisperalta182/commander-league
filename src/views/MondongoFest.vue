@@ -63,7 +63,7 @@ async function removeParticipant(p) {
     <p class="date-line">📅 No te pierdas este <strong>domingo 30 de agosto</strong> el <strong>Mondongo Fest</strong>.</p>
     <p class="muted">
       El domingo más sabroso del año: mazos sobre la mesa, mondongo en el fuego y cartas volando. 🍲🔥
-      Ven a jugar <strong>EDH</strong>, <strong>Pauper</strong> y hasta <strong>cEDH</strong> —
+      Ven a jugar <strong>EDH</strong>, <strong>Dual Commander</strong>, <strong>Pauper</strong>, <strong>Modern</strong> y hasta <strong>cEDH</strong> —
       desde la mesa más casual y política hasta la más tryhard. ¡Trae tu comandante favorito y tu mejor sombrero!
     </p>
     <div class="row">
