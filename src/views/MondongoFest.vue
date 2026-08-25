@@ -63,7 +63,7 @@ async function removeParticipant(p) {
     <p class="date-line">📅 No te pierdas este <strong>domingo 30 de agosto</strong> el <strong>Mondongo Fest</strong>.</p>
     <p class="muted">
       El domingo más sabroso del año: mazos sobre la mesa, mondongo en el fuego y cartas volando. 🍲🔥
-      Ven a jugar <strong>EDH</strong>, <strong>Dual Commander</strong>, <strong>Pauper</strong>, <strong>Modern</strong> y hasta <strong>cEDH</strong> —
+      Ven a jugar <strong>EDH</strong>, <strong>Dual Commander</strong>, <strong>Pauper</strong>, <strong>Modern</strong>, <strong>Legacy</strong> y hasta <strong>cEDH</strong> —
       desde la mesa más casual y política hasta la más tryhard. ¡Trae tu comandante favorito y tu mejor sombrero!
     </p>
     <div class="row">
@@ -80,7 +80,7 @@ async function removeParticipant(p) {
     </div>
   </div>
 
-  <div class="grid cols-3" style="margin-top:16px">
+  <div class="fmt-grid" style="margin-top:16px">
     <div class="card fmt"><div class="fmt-emoji">👑</div><strong>EDH / Commander</strong><p class="muted">Mesas de 3–4, política, caos y momentos memorables.</p></div>
     <div class="card fmt"><div class="fmt-emoji">🤺</div><strong>Dual Commander</strong><p class="muted">Commander 1 contra 1. Duelos tácticos con tu general.</p></div>
     <div class="card fmt"><div class="fmt-emoji">🪙</div><strong>Pauper</strong><p class="muted">Solo comunes, puro ingenio. Barato y brutal.</p></div>
@@ -148,6 +148,9 @@ async function removeParticipant(p) {
 .poster-fallback { text-align: center; padding: 50px 16px; font-size: 2rem; color: var(--muted); line-height: 1.6; }
 .poster-fallback span { font-size: .9rem; display: block; margin-top: 8px; }
 .poster-fallback code { background: var(--bg-soft); padding: 2px 6px; border-radius: 6px; font-size: .85rem; }
+.fmt-grid { display: grid; gap: 16px; grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 780px) { .fmt-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 480px) { .fmt-grid { grid-template-columns: 1fr; } }
 .fmt { text-align: center; }
 .fmt-emoji { font-size: 2rem; margin-bottom: 6px; }
 .fmt p { margin: 6px 0 0; font-size: .88rem; }
