@@ -8,6 +8,8 @@ const COLORS = ['#8b5cf6', '#ef4444', '#22c55e', '#3b82f6', '#e3b341', '#ec4899'
 const CX = 150, CY = 150, R = 145
 
 const participants = ref([])
+const winners = ref([])
+const currentRound = ref(1)
 const loading = ref(true)
 const rotation = ref(0)
 const spinning = ref(false)
@@ -15,14 +17,33 @@ const announce = ref(null)
 const error = ref('')
 
 const isAdmin = computed(() => auth.user?.isAdmin)
-const remaining = computed(() => participants.value.filter((p) => !p.ganador))
-const winners = computed(() => participants.value.filter((p) => p.ganador))
 
 async function load() {
-  participants.value = await db.listFestParticipants()
+  const [parts, wins, state] = await Promise.all([
+    db.listFestParticipants(),
+    db.listFestWinners(),
+    db.getFestState()
+  ])
+  participants.value = parts
+  winners.value = wins
+  currentRound.value = state.currentRound
   loading.value = false
 }
 onMounted(load)
+
+// Ya ganaron EN ESTA ronda (salen de la rueda hasta que se abra una nueva).
+const wonThisRound = computed(() => new Set(winners.value.filter((w) => w.round === currentRound.value).map((w) => w.participantId)))
+const remaining = computed(() => participants.value.filter((p) => !wonThisRound.value.has(p.id)))
+
+// Ganadores agrupados por ronda (Ronda 1, Ronda 2, …).
+const winnersByRound = computed(() => {
+  const map = new Map()
+  for (const w of winners.value) {
+    if (!map.has(w.round)) map.set(w.round, [])
+    map.get(w.round).push(w)
+  }
+  return [...map.entries()].sort((a, b) => a[0] - b[0]).map(([round, list]) => ({ round, list }))
+})
 
 function polar(radius, angleDeg) {
   const a = (angleDeg * Math.PI) / 180
@@ -47,11 +68,9 @@ const segments = computed(() => {
     const font = Math.max(7, Math.min(13, 300 / n))
     return {
       id: p.id,
-      name: p.name,
       color: COLORS[i % COLORS.length],
       path: `M ${CX} ${CY} L ${p0.x.toFixed(2)} ${p0.y.toFixed(2)} A ${R} ${R} 0 ${large} 1 ${p1.x.toFixed(2)} ${p1.y.toFixed(2)} Z`,
       lx: lp.x, ly: lp.y, rot, font,
-      // Recorta nombres largos para que quepan.
       label: p.name.length > 14 ? p.name.slice(0, 13) + '…' : p.name
     }
   })
@@ -74,7 +93,7 @@ async function spin() {
 
   setTimeout(async () => {
     try {
-      await db.setFestWinner(chosen.id)
+      await db.addFestWinner(chosen, currentRound.value)
       await load()
       announce.value = chosen.name
     } catch (e) {
@@ -83,6 +102,19 @@ async function spin() {
       spinning.value = false
     }
   }, 4700)
+}
+
+async function newRound() {
+  if (!isAdmin.value || spinning.value) return
+  if (!confirm(`¿Abrir la Ronda ${currentRound.value + 1}? Todos los inscritos vuelven a la tómbola para nuevos premios.`)) return
+  error.value = ''
+  try {
+    await db.newFestRound()
+    announce.value = null
+    await load()
+  } catch (e) {
+    error.value = e.message
+  }
 }
 </script>
 
@@ -101,12 +133,19 @@ async function spin() {
   <div v-if="loading" class="empty">Cargando…</div>
 
   <div v-else class="wheel-wrap card">
-    <div v-if="remaining.length === 0" class="empty">
-      🎊 ¡Ya no quedan participantes en la rueda! Todos han sido premiados.
+    <div class="round-tag">🎯 Ronda actual: <strong>{{ currentRound }}</strong></div>
+
+    <div v-if="participants.length === 0" class="empty">
+      Aún no hay inscritos. Comparte el <RouterLink to="/fest">Mondongo Fest</RouterLink> para que se apunten.
     </div>
 
     <template v-else>
-      <div class="wheel-box">
+      <div v-if="remaining.length === 0" class="empty allwon">
+        🎊 ¡Todos los inscritos ya ganaron un premio en la Ronda {{ currentRound }}!
+        <span v-if="isAdmin">Abre una nueva ronda para seguir rifando.</span>
+      </div>
+
+      <div v-else class="wheel-box">
         <div class="pointer">▼</div>
         <svg viewBox="0 0 300 300" class="wheel">
           <g class="wheel-rot" :style="{ transform: `rotate(${rotation}deg)` }">
@@ -126,45 +165,54 @@ async function spin() {
       </div>
 
       <div class="wheel-actions">
-        <p class="muted">{{ remaining.length }} participante{{ remaining.length === 1 ? '' : 's' }} en la rueda</p>
-        <button v-if="isAdmin" class="btn gold spin-btn" :disabled="spinning" @click="spin">
-          {{ spinning ? 'Girando…' : '🎯 ¡Girar la rueda!' }}
-        </button>
+        <p class="muted">{{ remaining.length }} en la rueda · {{ participants.length }} inscrito{{ participants.length === 1 ? '' : 's' }}</p>
+        <template v-if="isAdmin">
+          <button v-if="remaining.length > 0" class="btn gold spin-btn" :disabled="spinning" @click="spin">
+            {{ spinning ? 'Girando…' : '🎯 ¡Girar la rueda!' }}
+          </button>
+          <button class="btn ghost new-round-btn" :disabled="spinning" @click="newRound">🔄 ¿Nueva Ronda?</button>
+        </template>
         <p v-else class="muted" style="font-size:.85rem">Solo el organizador puede girar la rueda.</p>
       </div>
     </template>
   </div>
 
   <div class="card" style="margin-top:16px">
-    <h2 style="margin:0 0 10px">🏆 {{ winners.length }} Ganador{{ winners.length === 1 ? '' : 'es' }}</h2>
+    <h2 style="margin:0 0 10px">🏆 Ganadores</h2>
     <div v-if="winners.length === 0" class="empty">Aún no hay ganadores. ¡Gira la rueda!</div>
-    <div v-else class="tablewrap">
-      <table>
-        <thead><tr><th style="width:44px">#</th><th>Ganador</th><th>Premio</th></tr></thead>
-        <tbody>
-          <tr v-for="(w, i) in winners" :key="w.id">
-            <td class="tag-rank">{{ ['🥇','🥈','🥉'][i] || (i + 1) }}</td>
-            <td><strong>{{ w.name }}</strong></td>
-            <td class="muted">Premio #{{ i + 1 }}</td>
-          </tr>
-        </tbody>
-      </table>
+    <div v-else class="rounds">
+      <div v-for="grp in winnersByRound" :key="grp.round" class="round-block">
+        <div class="round-head">🏆 Ronda {{ grp.round }} <span class="muted">· {{ grp.list.length }} premio{{ grp.list.length === 1 ? '' : 's' }}</span></div>
+        <ol class="round-winners">
+          <li v-for="(w, i) in grp.list" :key="w.id">
+            <span class="wpos">{{ ['🥇','🥈','🥉'][i] || (i + 1) + '.' }}</span>
+            <strong>{{ w.name }}</strong>
+            <span class="muted">Premio #{{ i + 1 }}</span>
+          </li>
+        </ol>
+      </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.wheel-wrap { display: flex; flex-direction: column; align-items: center; gap: 18px; padding: 24px; }
+.wheel-wrap { display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 24px; }
+.round-tag { font-size: 1rem; background: var(--panel-2); border: 1px solid var(--border); border-radius: 999px; padding: 6px 16px; }
 .wheel-box { position: relative; width: 100%; max-width: 360px; }
 .wheel { width: 100%; height: auto; display: block; filter: drop-shadow(0 8px 24px rgba(0,0,0,.5)); }
 .wheel-rot { transform-box: fill-box; transform-origin: center; transition: transform 4.6s cubic-bezier(.16,.84,.3,1); }
-.pointer {
-  position: absolute; top: -6px; left: 50%; transform: translateX(-50%);
-  font-size: 2rem; color: var(--gold); z-index: 2;
-  text-shadow: 0 2px 4px rgba(0,0,0,.6); line-height: 1;
-}
-.wheel-actions { text-align: center; }
+.pointer { position: absolute; top: -6px; left: 50%; transform: translateX(-50%); font-size: 2rem; color: var(--gold); z-index: 2; text-shadow: 0 2px 4px rgba(0,0,0,.6); line-height: 1; }
+.wheel-actions { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 10px; }
 .spin-btn { font-size: 1.05rem; padding: 14px 28px; }
+.new-round-btn { font-size: .9rem; }
+.allwon { line-height: 1.6; }
 .winner-banner { font-size: 1.05rem; text-align: center; }
-.tablewrap { overflow-x: auto; }
+
+.rounds { display: grid; gap: 16px; }
+.round-block { background: var(--bg-soft); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
+.round-head { font-weight: 700; margin-bottom: 8px; }
+.round-winners { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.round-winners li { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 8px; }
+.round-winners li:hover { background: rgba(255,255,255,.03); }
+.wpos { width: 26px; text-align: center; font-variant-numeric: tabular-nums; }
 </style>

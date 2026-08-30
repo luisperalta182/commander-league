@@ -23,6 +23,8 @@ const K_USERS = 'cl.users'
 const K_MATCHDAYS = 'cl.matchdays'
 const K_SESSION = 'cl.session'
 const K_FEST = 'cl.fest'
+const K_FEST_WINNERS = 'cl.festwinners'
+const K_FEST_ROUND = 'cl.festround'
 
 const read = (k, fallback) => {
   try { return JSON.parse(localStorage.getItem(k)) ?? fallback } catch { return fallback }
@@ -167,6 +169,29 @@ const localBackend = {
 
   async deleteFestParticipant(id) {
     write(K_FEST, read(K_FEST, []).filter((x) => x.id !== id))
+  },
+
+  // ---- Rifa por rondas ----
+  async getFestState() {
+    return { currentRound: read(K_FEST_ROUND, 1) }
+  },
+
+  async listFestWinners() {
+    return read(K_FEST_WINNERS, []).slice().sort((a, b) => (a.createdAt || '').localeCompare(b.createdAt || ''))
+  },
+
+  async addFestWinner(participant, round) {
+    const list = read(K_FEST_WINNERS, [])
+    const w = { id: uid(), participantId: participant.id, name: participant.name, round, createdAt: new Date().toISOString() }
+    list.push(w)
+    write(K_FEST_WINNERS, list)
+    return w
+  },
+
+  async newFestRound() {
+    const next = read(K_FEST_ROUND, 1) + 1
+    write(K_FEST_ROUND, next)
+    return next
   }
 }
 
@@ -327,6 +352,33 @@ const supabaseBackend = {
   async deleteFestParticipant(id) {
     const { error } = await supabase.from('fest_participants').delete().eq('id', id)
     if (error) throw new Error(error.message)
+  },
+
+  // ---- Rifa por rondas ----
+  async getFestState() {
+    const { data } = await supabase.from('fest_state').select('current_round').eq('id', 'singleton').single()
+    return { currentRound: (data && data.current_round) || 1 }
+  },
+
+  async listFestWinners() {
+    const { data, error } = await supabase.from('fest_winners').select('*').order('created_at')
+    if (error) throw new Error(error.message)
+    return data.map((r) => ({ id: r.id, participantId: r.participant_id, name: r.name, round: r.round, createdAt: r.created_at }))
+  },
+
+  async addFestWinner(participant, round) {
+    const row = { id: uid(), participant_id: participant.id, name: participant.name, round }
+    const { error } = await supabase.from('fest_winners').insert(row)
+    if (error) throw new Error(error.message)
+    return { id: row.id, participantId: participant.id, name: participant.name, round }
+  },
+
+  async newFestRound() {
+    const { data } = await supabase.from('fest_state').select('current_round').eq('id', 'singleton').single()
+    const next = ((data && data.current_round) || 1) + 1
+    const { error } = await supabase.from('fest_state').update({ current_round: next }).eq('id', 'singleton')
+    if (error) throw new Error(error.message)
+    return next
   }
 }
 

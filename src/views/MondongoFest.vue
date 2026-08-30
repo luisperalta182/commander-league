@@ -8,6 +8,7 @@ const posterUrl = import.meta.env.BASE_URL + 'mondongo-fest.jpg'
 const imgError = ref(false)
 
 const participants = ref([])
+const winners = ref([])
 const loading = ref(true)
 const showModal = ref(false)
 const newName = ref('')
@@ -17,8 +18,17 @@ const busy = ref(false)
 const isAdmin = computed(() => auth.user?.isAdmin)
 const count = computed(() => participants.value.length)
 
+// Cuántos premios ha ganado cada inscrito (sumando todas las rondas).
+const winsById = computed(() => {
+  const m = {}
+  for (const w of winners.value) m[w.participantId] = (m[w.participantId] || 0) + 1
+  return m
+})
+
 async function load() {
-  participants.value = await db.listFestParticipants()
+  const [parts, wins] = await Promise.all([db.listFestParticipants(), db.listFestWinners()])
+  participants.value = parts
+  winners.value = wins
   loading.value = false
 }
 onMounted(load)
@@ -108,8 +118,8 @@ async function removeParticipant(p) {
             <td class="tag-rank">{{ i + 1 }}</td>
             <td><strong>{{ p.name }}</strong></td>
             <td>
-              <span v-if="p.ganador" class="badge win">🏆 Ganador</span>
-              <span v-else class="badge">🎟️ En la rifa</span>
+              <span v-if="winsById[p.id]" class="badge win">🏆 {{ winsById[p.id] }} premio{{ winsById[p.id] === 1 ? '' : 's' }}</span>
+              <span v-else class="badge">🎟️ Inscrito</span>
             </td>
             <td v-if="isAdmin" class="num">
               <button class="btn danger sm" @click="removeParticipant(p)">Eliminar</button>
